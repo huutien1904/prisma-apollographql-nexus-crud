@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String   @db.VarChar(255)
+  content   String?
+  published Boolean  @default(false)
+  authorId  String
+  User      User     @relation(fields: [authorId], references: [id])
+
+  @@index([authorId(sort: "Asc")], name: "authorIdPost")
+}
+
+model Profile {
+  id     String  @id @default(cuid())
+  bio    String?
+  avatar String?
+  userId String  @unique
+  User   User    @relation(fields: [userId], references: [id])
+
+  @@index([userId], name: "userIdProfile")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String?
+  password   String
+  deletedBy  String?
+  street     String?
+  role       Role     @default(USER)
+  User       User?    @relation("User_User_deletedBy", fields: [deletedBy], references: [id])
+  Other_User User[]   @relation("User_User_deletedBy")
+  Post       Post[]
+  Profile    Profile?
+
+  @@index([deletedBy], name: "deletedByStaff")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
